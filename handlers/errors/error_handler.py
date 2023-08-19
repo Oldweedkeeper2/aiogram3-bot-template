@@ -1,6 +1,7 @@
 import logging
 from typing import Any
 
+from aiogram import Router
 from aiogram.exceptions import (TelegramAPIError,
                                 TelegramUnauthorizedError,
                                 TelegramBadRequest,
@@ -16,9 +17,8 @@ from aiogram.exceptions import (TelegramAPIError,
                                 TelegramServerError)
 from aiogram.handlers import ErrorHandler
 
-from loader import dp
 
-router = dp.router
+router = Router()
 
 
 @router.errors()

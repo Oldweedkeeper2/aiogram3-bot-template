@@ -5,10 +5,10 @@ from aiogram.filters import Command
 from aiogram.handlers import MessageHandler
 from aiogram.methods import SendMessage
 
-start_router = Router()
+router = Router()
 
 
-@start_router.message(Command(commands='start'))
+@router.message(Command(commands=['start']))
 class MyHandler(MessageHandler):
     # название функции всегда handle, потому что это перезапись метода
     async def handle(self) -> Any:
