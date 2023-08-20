@@ -8,8 +8,8 @@ from aiogram.methods import SendMessage
 router = Router()
 
 
-@router.message(Command(commands=['help']))
+@router.message()
 class MyHandler(MessageHandler):
-    # название функции всегда handle, потому что это перезапись метода
+    # Название функции всегда handle, потому что это перезапись метода
     async def handle(self) -> Any:
         return SendMessage(chat_id=self.chat.id, text=self.event.text)
