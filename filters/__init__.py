@@ -1,1 +1,1 @@
-from .private_chat import ChatTypeFilter
+from .private_chat import ChatPrivateFilter

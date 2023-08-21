@@ -1,6 +1,6 @@
 from aiogram import Router
 
-from filters import ChatTypeFilter
+from filters import ChatPrivateFilter
 
 
 def setup_routers() -> Router:
@@ -10,7 +10,7 @@ def setup_routers() -> Router:
     router = Router()
     
     # Устанавливаем локальный фильтр, если нужно
-    start.router.message.filter(ChatTypeFilter(chat_type=["private"]))
+    start.router.message.filter(ChatPrivateFilter(chat_type=["private"]))
     
     router.include_router(start.router)
     router.include_router(echo.router)

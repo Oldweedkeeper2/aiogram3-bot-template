@@ -1,17 +1,16 @@
 import asyncio
+from functools import partial
 
-import aiojobs
 from aiogram import Bot, Dispatcher
 from aiogram.client.session.middlewares.request_logging import RequestLogging, logger
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.methods import GetUpdates
-from aiogram.webhook.aiohttp_server import setup_application
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler
 from aiohttp import web
 
-import web_handlers
 from data import config
-from filters import ChatTypeFilter
+from filters import ChatPrivateFilter
 from handlers import setup_routers
 from middlewares.throttling import ThrottlingMiddleware
 from utils.webhook import aiogram_on_startup_webhook, aiogram_on_shutdown_webhook
@@ -19,13 +18,13 @@ from utils.webhook import aiogram_on_startup_webhook, aiogram_on_shutdown_webhoo
 
 def setup_handlers(dispatcher: Dispatcher) -> None:
     """HANDLERS"""
-    
+
     dispatcher.include_router(setup_routers())
 
 
 def setup_middlewares(dispatcher: Dispatcher, bot: Bot) -> None:
     """MIDDLEWARE"""
-    
+
     # # Базовый Middleware Aiogram для логгирования запросов сессии.
     # # Подробности в документации https://docs.aiogram.dev/en/dev-3.x/api/session/middleware.html#
     if not config.USE_WEBHOOK:
@@ -39,7 +38,7 @@ def setup_filters(dispatcher: Dispatcher) -> None:
     """FILTERS"""
     # Классический общий Filter для определения типа чата
     # Также фильтр можно ставить отдельно на каждый роутер в handlers/users/__init__
-    dispatcher.message.filter(ChatTypeFilter(chat_type=["private"]))
+    dispatcher.message.filter(ChatPrivateFilter(chat_type=["private"]))
 
 
 async def setup_aiogram(dispatcher: Dispatcher, bot: Bot) -> None:
@@ -53,7 +52,7 @@ async def setup_aiogram(dispatcher: Dispatcher, bot: Bot) -> None:
 async def aiogram_on_startup_polling(dispatcher: Dispatcher, bot: Bot) -> None:
     from utils.set_bot_commands import set_default_commands
     from utils.notify_admins import on_startup_notify
-    
+
     logger.info("Starting polling")
     await bot.delete_webhook(drop_pending_updates=True)
     await setup_aiogram(bot=bot, dispatcher=dispatcher)
@@ -68,66 +67,46 @@ async def aiogram_on_shutdown_polling(dispatcher: Dispatcher, bot: Bot):
 
 
 async def aiohttp_on_startup(app: web.Application) -> None:
-    dispatcher: Dispatcher = app["dispatcher"]
-    workflow_data = {"app": app, "dispatcher": dispatcher}
-    if "bot" in app:
-        workflow_data["bot"] = app["bot"]
-    await dispatcher.emit_startup(**workflow_data)
+    ...
 
 
 async def aiohttp_on_shutdown(app: web.Application) -> None:
-    dispatcher: Dispatcher = app["dispatcher"]
-    for i in [app, *app._subapps]:  # Нужно переделать
-        if "scheduler" in i:
-            scheduler: aiojobs.Scheduler = i["scheduler"]
-            scheduler._closed = True
-            while scheduler.pending_count != 0:
-                dispatcher["aiogram_logger"].info(
-                        f"Waiting for {scheduler.pending_count} tasks to complete"
-                )
-                await asyncio.sleep(1)
-    workflow_data = {"app": app, "dispatcher": dispatcher}
-    if "bot" in app:
-        workflow_data["bot"] = app["bot"]
-    await dispatcher.emit_shutdown(**workflow_data)
+    ...
 
 
 async def setup_aiohttp_app(bot: Bot, dispatcher: Dispatcher) -> web.Application:
-    scheduler = aiojobs.Scheduler()
+    from data.config import WEBHOOK_SECRET, MAIN_WEBHOOK_PATH
+
     app = web.Application()
-    subapps: list[tuple[str, web.Application]] = [
-        ("/tg/webhooks/", web_handlers.tg_updates_app),
-    ]
-    for prefix, subapp in subapps:
-        subapp["bot"] = bot
-        subapp["dispatcher"] = dispatcher
-        subapp["scheduler"] = scheduler
-        app.add_subapp(prefix, subapp)
-    app["bot"] = bot
-    app["dispatcher"] = dispatcher
-    app["scheduler"] = scheduler
-    app.on_startup.append(aiohttp_on_startup)
-    app.on_shutdown.append(aiohttp_on_shutdown)
+    webhook_requests_handler = SimpleRequestHandler(
+        dispatcher=dispatcher,
+        bot=bot,
+        secret_token=WEBHOOK_SECRET,
+    )
+    webhook_requests_handler.register(app, path=MAIN_WEBHOOK_PATH)
     return app
 
 
 def main():
     """CONFIG"""
-    
-    bot = Bot(token=config.BOT_TOKEN, parse_mode=ParseMode.HTML)
+    from data.config import BOT_TOKEN, USE_WEBHOOK
+
+    bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
     storage = MemoryStorage()
     dispatcher = Dispatcher(storage=storage)
-    if config.USE_WEBHOOK:
-        dispatcher.startup.register(aiogram_on_startup_webhook)
-        dispatcher.shutdown.register(aiogram_on_shutdown_webhook)
-        app = asyncio.run(setup_aiohttp_app(bot, dispatcher))
+    if USE_WEBHOOK:
+        from data.config import MAIN_WEBHOOK_LISTENING_HOST, MAIN_WEBHOOK_LISTENING_PORT
+
+        app = asyncio.run(setup_aiohttp_app(bot=bot,
+                                            dispatcher=dispatcher))
+        dispatcher.startup.register(partial(aiogram_on_startup_webhook, bot=bot, dispatcher=dispatcher))
+        dispatcher.shutdown.register(partial(aiogram_on_shutdown_webhook, bot=bot, dispatcher=dispatcher))
         web.run_app(
-                app,
-                handle_signals=True,
-                host=config.MAIN_WEBHOOK_LISTENING_HOST,
-                port=config.MAIN_WEBHOOK_LISTENING_PORT,
+            app,
+            handle_signals=True,
+            host=MAIN_WEBHOOK_LISTENING_HOST,
+            port=MAIN_WEBHOOK_LISTENING_PORT,
         )
-        setup_application(app, dispatcher, bot=bot)
     else:
         dispatcher.startup.register(aiogram_on_startup_polling)
         dispatcher.shutdown.register(aiogram_on_shutdown_polling)

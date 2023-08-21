@@ -8,6 +8,7 @@ from aiogram.methods import SendMessage
 router = Router()
 
 
+# проверить FSMContext
 @router.message(Command(commands=['start']))
 class MyHandler(MessageHandler):
     # название функции всегда handle, потому что это перезапись метода

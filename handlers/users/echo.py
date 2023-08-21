@@ -1,7 +1,6 @@
 from typing import Any
 
 from aiogram import Router
-from aiogram.filters import Command
 from aiogram.handlers import MessageHandler
 from aiogram.methods import SendMessage
 

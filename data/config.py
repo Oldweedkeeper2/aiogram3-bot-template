@@ -23,10 +23,18 @@ if USE_WEBHOOK:
     MAIN_WEBHOOK_ADDRESS: str = env.str("MAIN_WEBHOOK_ADDRESS")
     MAIN_WEBHOOK_SECRET_TOKEN: str = env.str("MAIN_WEBHOOK_SECRET_TOKEN")
     
+    MAIN_WEBHOOK_PATH: str = env.str("MAIN_WEBHOOK_PATH")
     MAIN_WEBHOOK_LISTENING_HOST: str = env.str("MAIN_WEBHOOK_LISTENING_HOST")
     MAIN_WEBHOOK_LISTENING_PORT: int = env.int("MAIN_WEBHOOK_LISTENING_PORT")
-    
+
     MAX_UPDATES_IN_QUEUE: int = env.int("MAX_UPDATES_IN_QUEUE", 100)
+
+
+    # Secret key to validate requests from Telegram (optional)
+    WEBHOOK_SECRET = "my-secret"
+    # Base URL for webhook will be used to generate webhook URL for Telegram,
+    # in this example it is used public DNS with HTTPS support
+    BASE_WEBHOOK_URL = "https://aiogram.dev/"
 
 USE_CUSTOM_API_SERVER: bool = env.bool("USE_CUSTOM_API_SERVER", False)
 
