@@ -8,9 +8,9 @@ from aiogram.methods import SendMessage
 router = Router()
 
 
-# проверить FSMContext
 @router.message(Command(commands=['start']))
 class MyHandler(MessageHandler):
+
     # название функции всегда handle, потому что это перезапись метода
     async def handle(self) -> Any:
         return SendMessage(chat_id=self.chat.id, text=f"Hello, {self.from_user.username}")
