@@ -9,8 +9,9 @@ async def on_startup_notify(bot: Bot):
     for admin in admins:
         try:
             bot_properties = await bot.me()
-            await bot.send_message(admin, f"Бот запущен:\n\n"
-                                          f"<b>Bot id:</> {bot_properties.id}\n"
-                                          f"<b>Username:</> {bot_properties.username}")
+            message = ["Бот начал работу.",
+                       f"<b>Bot id:</> {bot_properties.id}",
+                       f"<b>Bot username:</> {bot_properties.username}"]
+            await bot.send_message(admin, "\n".join(message))
         except Exception as err:
             logging.exception(err)

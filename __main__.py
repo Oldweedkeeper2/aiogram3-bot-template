@@ -80,7 +80,7 @@ async def setup_aiohttp_app(bot: Bot, dispatcher: Dispatcher) -> web.Application
         bot=bot,
         secret_token=MAIN_WEBHOOK_SECRET_TOKEN,
     )
-    webhook_requests_handler.register(app, path=MAIN_WEBHOOK_PATH)
+    webhook_requests_handler.register(app, path=f'/{MAIN_WEBHOOK_PATH}')
     setup_application(app, dispatcher, bot=bot)
     return app
 
