@@ -85,11 +85,12 @@ async def setup_aiohttp_app(bot: Bot, dispatcher: Dispatcher) -> web.Application
     return app
 
 
-async def get_ssl_cert():
-    import ssl
-    from data.config import WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV
-    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-    context.load_cert_chain(WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV)
+# async def get_ssl_cert():
+#     import ssl
+#     from data.config import WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV
+#     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+#     context.load_cert_chain(WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV)
+#     return context
 
 
 def main():
