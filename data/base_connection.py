@@ -1,7 +1,7 @@
 import asyncpg
 
 
-class DB:
+class DataBase:
     @staticmethod
     async def connection(user='', password='', host='localhost', port='',
                          database='') -> asyncpg.Connection:
